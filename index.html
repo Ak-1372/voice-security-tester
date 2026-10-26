@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel // Voice & Text Password Security Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.6);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #6366f1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #f43f5e;
+      --bar-bg: rgba(255, 255, 255, 0.06);
+      --amber: #d98e04;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text-main);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      width: 100%;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #6366f1, #10b981, #f59e0b);
+      opacity: 0.6;
+    }
+
+    .header { margin-bottom: 24px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: #818cf8; font-size: 11.5px; font-weight: 600;
+      padding: 4px 10px; border-radius: 999px; margin-bottom: 10px;
+    }
+    .title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+
+    .form-group { margin-bottom: 20px; }
+    .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    .btn-gen {
+      background: none; border: none; color: #818cf8; font-size: 12.5px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;
+    }
+    .btn-gen:hover { color: #a5b4fc; }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper input, select {
+      width: 100%; height: 48px; padding: 0 88px 0 16px;
+      font-family: 'JetBrains Mono', monospace; font-size: 14.5px;
+      color: var(--text-main); background: rgba(15, 23, 42, 0.6);
+      border: 1.5px solid var(--border); border-radius: 10px; outline: none; transition: all 0.2s ease;
+    }
+    select { padding: 0 16px; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .input-wrapper input:focus, select:focus { border-color: var(--border-focus); background: rgba(15, 23, 42, 0.9); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15); }
+
+    .action-icons { position: absolute; right: 8px; display: flex; align-items: center; gap: 2px; }
+    .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .icon-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+
+    .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); padding: 12px 14px; border-radius: 10px; }
+    .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: var(--text-main); }
+
+    .meter-container { margin-bottom: 24px; }
+    .meter-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 8px; }
+    .meter-status { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+    .meter-bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; height: 5px; }
+    .segment { background: var(--bar-bg); border-radius: 999px; transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px; }
+    .chips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .chip {
+      background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #64748b; transition: all 0.2s ease;
+    }
+    .chip svg { width: 14px; height: 14px; stroke-width: 2.5; flex-shrink: 0; }
+    .chip.valid { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #a7f3d0; }
+    .chip.valid svg { stroke: var(--success); }
+
+    .ai-suggestion {
+      margin-top: 20px; padding: 16px; background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.22); border-radius: 10px;
+    }
+    .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .ai-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+    .ai-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #a5b4fc; }
+    #aiSuggestionText { font-size: 13px; line-height: 1.6; color: #cbd5e1; }
+
+    #scope {
+      width: 100%; height: 70px; display: block; background: rgba(15, 23, 42, 0.9);
+      border-radius: 10px; margin-bottom: 16px; border: 1px solid var(--border);
+    }
+
+    .btn-primary, .btn-amber, .btn-danger {
+      width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: 600;
+      font-size: 14px; cursor: pointer; margin-top: 10px; transition: opacity 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-amber { background: var(--amber); color: #1b1200; }
+    .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    ul { list-style: none; padding: 0; margin-top: 14px; }
+    li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+    li audio { height: 30px; flex: 1; }
+
+    #result {
+      margin-top: 16px; padding: 16px; border-left: 4px solid var(--border);
+      background: rgba(15, 23, 42, 0.6); border-radius: 8px;
+    }
+    #result b { display: block; font-size: 1.2rem; color: var(--text-main); }
+    #result.ok { border-color: var(--success); }
+    #result.ok b { color: var(--success); }
+    #result.bad { border-color: var(--danger); }
+    #result.bad b { color: var(--danger); }
+    #result.warn { border-color: var(--warning); }
+    #result.warn b { color: var(--warning); }
+
+    .voice-meters { margin-top: 20px; display: grid; gap: 16px; }
+    .v-meter { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); padding: 12px 14px; border-radius: 10px; }
+    .vm-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; font-size: 13px; margin-bottom: 6px; color: var(--text-muted); }
+    .vm-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--text-main); }
+    .vm-track { position: relative; height: 10px; border-radius: 99px; background: var(--bar-bg); overflow: hidden; }
+    .vm-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; border-radius: 99px; transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.4s; }
+
+    .form-group > .label { display: block; margin-bottom: 8px; }
+    .form-group > input[type=text] { display: block; width: 100%; height: 48px; padding: 0 16px; font-size: 14.5px; color: var(--text-main); background: rgba(15, 23, 42, 0.6); border: 1.5px solid var(--border); border-radius: 10px; outline: none; }
+    .form-group > input[type=text]:disabled { opacity: .6; }
+    li { flex-wrap: wrap; }
+    li.s-ok { color: #a7f3d0; } li.s-bad { color: #fda4af; }
+    .vm-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: #f8fafc; opacity: .85; display: none; }
+    .vm-note { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
+    #result small { display: block; margin-top: 4px; }
+
+    .toast {
+      position: absolute; top: 14px; right: 14px; background: #1e293b; border: 1px solid var(--border);
+      color: #cbd5e1; font-size: 12px; padding: 6px 12px; border-radius: 6px; opacity: 0;
+      transform: translateY(-8px); transition: all 0.2s ease; pointer-events: none; z-index: 10;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div id="toast" class="toast">Copied to clipboard</div>
+
+    <!-- 1. PASSWORD STRENGTH CHECKER -->
+    <div class="card">
+      <div class="header">
+        <div class="badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Security Audit
+        </div>
+        <h1 class="title">Entropy & Strength Analyzer</h1>
+        <p class="subtitle">Real-time cryptographic complexity evaluation.</p>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label class="label" for="passwordInput">Password Key</label>
+          <button type="button" class="btn-gen" id="generateBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            Generate Strong
+          </button>
+        </div>
+        <div class="input-wrapper">
+          <input type="password" id="passwordInput" placeholder="Enter password..." autocomplete="off" spellcheck="false">
+          <div class="action-icons">
+            <button type="button" class="icon-btn" id="copyBtn" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+            <button type="button" class="icon-btn" id="toggleVisibility" title="Show/Hide">
+              <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Estimated Crack Time</div>
+          <div class="stat-val" id="crackTime">Instant</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Information Entropy</div>
+          <div class="stat-val" id="entropyVal">0 bits</div>
+        </div>
+      </div>
+
+      <div class="meter-container">
+        <div class="meter-header">
+          <span style="color: var(--text-muted); font-size: 12px;">Security Grade</span>
+          <span class="meter-status" id="strengthStatus">Unrated</span>
+        </div>
+        <div class="meter-bars">
+          <div class="segment" id="seg1"></div>
+          <div class="segment" id="seg2"></div>
+          <div class="segment" id="seg3"></div>
+          <div class="segment" id="seg4"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Entropy Factors</div>
+      <div class="chips-grid">
+        <div class="chip" id="req-length"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>8+ Characters</span></div>
+        <div class="chip" id="req-upper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>Uppercase (A-Z)</span></div>
+        <div class="chip" id="req-lower"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>Lowercase (a-z)</span></div>
+        <div class="chip" id="req-number"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>Numeric (0-9)</span></div>
+        <div class="chip" id="req-special" style="grid-column: span 2;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg><span>Special Characters (!@#$%^&*)</span></div>
+      </div>
+
+      <div class="ai-suggestion">
+        <div class="ai-header">
+          <div class="ai-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 0-4 12.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26A7 7 0 0 0 12 2z"/><path d="M9 22h6"/><path d="M12 19v3"/></svg></div>
+          <div class="ai-title">AI Improvement Suggestion</div>
+        </div>
+        <p id="aiSuggestionText">Enter a password to receive an intelligent security recommendation.</p>
+      </div>
+    </div>
+
+    <!-- 2. VOICE PASSWORD SECURITY HUB (Connected to Python Backend) -->
+    <div class="card">
+      <div class="header">
+        <div class="badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/></svg>
+          Python Biometric Security
+        </div>
+        <h1 class="title">Voice Password Verification</h1>
+        <p class="subtitle">Record 3 training samples, then verify via Python backend.</p>
+      </div>
+
+      <canvas id="scope" aria-label="Microphone level"></canvas>
+
+      <div class="form-group">
+        <label class="label" for="ownerName">Owner Name</label>
+        <input type="text" id="ownerName" value="Aryan">
+      </div>
+      <div class="form-group">
+        <label class="label" for="voicePhrase">Password Phrase</label>
+        <input type="text" id="voicePhrase" value="abhi hi password hai">
+      </div>
+
+      <button id="recBtn" class="btn-primary">Record sample (4.5 sec)</button>
+      <button id="resetBtn" class="btn-danger">Sab delete karo</button>
+      <div class="stat-val" id="sampleCount" style="margin-top: 10px;">0 / 3 samples saved</div>
+      <ul id="sampleList"></ul>
+
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
+      <button id="verBtn" class="btn-amber" disabled>Speak password & Verify</button>
+      
+      <div id="result" role="status"><b>Ready</b><small style="color:var(--text-muted)">Pehle 3 samples save karo.</small></div>
+
+      <div class="voice-meters">
+        <div class="v-meter">
+          <div class="vm-header">
+            <span>Password Phrase Match</span>
+            <span class="vm-val" id="passVal">0%</span>
+          </div>
+          <div class="vm-track"><div class="vm-fill" id="passFill"></div></div>
+        </div>
+        <div class="v-meter">
+          <div class="vm-header">
+            <span>Speaker Similarity</span>
+            <span class="vm-val" id="voiceVal">0%</span>
+          </div>
+          <div class="vm-track"><div class="vm-fill" id="voiceFill"></div><div class="vm-mark" id="thrMark" title="Decision threshold"></div></div>
+        </div>
+      </div>
+      <p class="vm-note" style="margin-top:14px;">Speaker Similarity ek cosine score hai (white line = threshold), identity ki probability nahi. Threshold ko apni genuine aur doosre logon ki recordings se calibrate karein.</p>
+    </div>
+  </div>
+
+  <script>
+    /* Password Strength Script */
+    const input = document.getElementById('passwordInput');
+    const toggleBtn = document.getElementById('toggleVisibility');
+    const copyBtn = document.getElementById('copyBtn');
+    const generateBtn = document.getElementById('generateBtn');
+    const statusText = document.getElementById('strengthStatus');
+    const crackTimeEl = document.getElementById('crackTime');
+    const entropyEl = document.getElementById('entropyVal');
+    const aiSuggestionEl = document.getElementById('aiSuggestionText');
+    const toast = document.getElementById('toast');
+    const segments = [document.getElementById('seg1'), document.getElementById('seg2'), document.getElementById('seg3'), document.getElementById('seg4')];
+
+    const checkIcon = `<polyline points="20 6 9 17 4 12"></polyline>`;
+    const circleIcon = `<circle cx="12" cy="12" r="10"/>`;
+    const rules = {
+      length: { regex: /.{8,}/, el: document.getElementById('req-length') },
+      upper: { regex: /[A-Z]/, el: document.getElementById('req-upper') },
+      lower: { regex: /[a-z]/, el: document.getElementById('req-lower') },
+      number: { regex: /[0-9]/, el: document.getElementById('req-number') },
+      special: { regex: /[^A-Za-z0-9]/, el: document.getElementById('req-special') }
+    };
+
+    function calculateEntropy(pwd) {
+      if (!pwd) return { bits: 0, time: 'Instant' };
+      let pool = 0;
+      if (/[a-z]/.test(pwd)) pool += 26;
+      if (/[A-Z]/.test(pwd)) pool += 26;
+      if (/[0-9]/.test(pwd)) pool += 10;
+      if (/[^A-Za-z0-9]/.test(pwd)) pool += 32;
+      
+      const entropy = Math.round(pwd.length * Math.log2(pool || 1));
+      const combinations = Math.pow(pool, pwd.length);
+      const seconds = combinations / (10 * 10**9);
+      
+      let timeStr = 'Instant';
+      if (seconds > 31536000 * 1000) timeStr = `${Math.round(seconds / 31536000 / 1000)}k years`;
+      else if (seconds > 31536000) timeStr = `${Math.round(seconds / 31536000)} years`;
+      else if (seconds > 86400) timeStr = `${Math.round(seconds / 86400)} days`;
+      else if (seconds > 3600) timeStr = `${Math.round(seconds / 3600)} hours`;
+      else if (seconds > 60) timeStr = `${Math.round(seconds / 60)} mins`;
+      else if (seconds >= 1) timeStr = `${Math.round(seconds)} secs`;
+      return { bits: entropy, time: timeStr };
+    }
+
+    function evaluate() {
+      const val = input.value;
+      let passedCount = 0;
+      for (const key in rules) {
+        const isValid = rules[key].regex.test(val);
+        const chip = rules[key].el;
+        chip.classList.toggle('valid', isValid);
+        chip.querySelector('svg').innerHTML = isValid ? checkIcon : circleIcon;
+        if (isValid) passedCount++;
+      }
+      const { bits, time } = calculateEntropy(val);
+      entropyEl.innerText = `${bits} bits`;
+      crackTimeEl.innerText = time;
+      segments.forEach(seg => seg.style.background = 'var(--bar-bg)');
+      if (val.length === 0) {
+        statusText.innerText = 'Unrated';
+        statusText.style.color = 'var(--text-muted)';
+        aiSuggestionEl.innerText = 'Enter a password to receive an intelligent security recommendation.';
+        return;
+      }
+      
+      let score = (passedCount <= 2 || bits < 28) ? 1 : (passedCount <= 3 || bits < 40) ? 2 : (passedCount <= 4 || bits < 60) ? 3 : 4;
+      const levels = [
+        { label: 'Vulnerable', color: 'var(--danger)' },
+        { label: 'Weak', color: 'var(--warning)' },
+        { label: 'Standard', color: '#60a5fa' },
+        { label: 'Fortified', color: 'var(--success)' }
+      ];
+      
+      const current = levels[score - 1];
+      statusText.innerText = current.label;
+      statusText.style.color = current.color;
+      for (let i = 0; i < score; i++) segments[i].style.background = current.color;
+      
+      if (score === 4) {
+        aiSuggestionEl.innerText = 'Excellent password complexity! High entropy protects against brute-force attacks.';
+      } else {
+        aiSuggestionEl.innerText = 'Consider mixing uppercase letters, numbers, and special symbols to increase your entropy score.';
+      }
+    }
+
+    input.addEventListener('input', evaluate);
+    toggleBtn.addEventListener('click', () => {
+      const isPwd = input.type === 'password';
+      input.type = isPwd ? 'text' : 'password';
+    });
+    copyBtn.addEventListener('click', () => {
+      if (!input.value) return;
+      navigator.clipboard.writeText(input.value);
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1800);
+    });
+    generateBtn.addEventListener('click', () => {
+      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|";
+      const rnd = new Uint32Array(16);
+      crypto.getRandomValues(rnd);
+      let pwd = "";
+      for (let i = 0; i < 16; i++) pwd += chars.charAt(rnd[i] % chars.length);
+      input.value = pwd;
+      evaluate();
+    });
+
+    /* Voice Verification connected to the Python Flask backend on port 5001 */
+    const cv = document.getElementById('scope'), g = cv.getContext('2d');
+    function fit() { cv.width = cv.clientWidth * devicePixelRatio; cv.height = cv.clientHeight * devicePixelRatio; }
+    fit(); addEventListener('resize', fit);
+    function idle() { g.clearRect(0, 0, cv.width, cv.height); g.strokeStyle = '#4b5a69'; g.beginPath(); g.moveTo(0, cv.height / 2); g.lineTo(cv.width, cv.height / 2); g.stroke(); }
+    idle();
+
+    const DUR = 4500;
+    let savedCount = 0;
+
+    /* Convert recorded WebM/Opus into a real 16kHz mono 16-bit WAV so librosa can read it */
+    async function blobToWav(blob) {
+      const ctx = new AudioContext({ sampleRate: 16000 });
+      const audioBuf = await ctx.decodeAudioData(await blob.arrayBuffer());
+      const raw = audioBuf.getChannelData(0);
+      let peak = 0; for (let i = 0; i < raw.length; i++) { const a = Math.abs(raw[i]); if (a > peak) peak = a; }
+      const gain = peak > 0.005 ? Math.min(0.9 / peak, 30) : 1;   // lift quiet recordings
+      const data = raw.map(x => x * gain);
+      const buffer = new ArrayBuffer(44 + data.length * 2);
+      const v = new DataView(buffer);
+      const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+      w(0, 'RIFF'); v.setUint32(4, 36 + data.length * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+      v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, 16000, true); v.setUint32(28, 32000, true);
+      v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+      w(36, 'data'); v.setUint32(40, data.length * 2, true);
+      for (let i = 0; i < data.length; i++) {
+        const s = Math.max(-1, Math.min(1, data[i]));
+        v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      }
+      ctx.close();
+      const out = new Blob([buffer], { type: 'audio/wav' });
+      out.peak = peak; out.secs = data.length / 16000;
+      return out;
+    }
+
+    async function recordClip(btn) {
+      const st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true, channelCount: 1 } });
+      const ac = new AudioContext(); if (ac.state === 'suspended') await ac.resume().catch(() => {});
+      const an = ac.createAnalyser(); an.fftSize = 1024; ac.createMediaStreamSource(st).connect(an);
+      const rec = new MediaRecorder(st), chunks = []; rec.ondataavailable = e => chunks.push(e.data);
+      const stopped = new Promise(r => rec.onstop = r); rec.start();
+      const t0 = performance.now(), buf = new Uint8Array(an.fftSize), label = btn.textContent;
+      
+      (function draw() {
+        const el = performance.now() - t0; if (el >= DUR) return;
+        btn.textContent = 'Recording… ' + Math.ceil((DUR - el) / 1000);
+        an.getByteTimeDomainData(buf); g.clearRect(0, 0, cv.width, cv.height); g.strokeStyle = '#f0b429'; g.lineWidth = 2; g.beginPath();
+        for (let i = 0; i < buf.length; i++) { 
+          const x = (i / buf.length) * cv.width, y = (buf[i] / 255) * cv.height; 
+          i ? g.lineTo(x, y) : g.moveTo(x, y); 
+        } 
+        g.stroke();
+        requestAnimationFrame(draw);
+      })();
+      
+      await new Promise(r => setTimeout(r, DUR)); rec.stop(); await stopped;
+      st.getTracks().forEach(t => t.stop()); ac.close(); btn.textContent = label; idle();
+      return await blobToWav(new Blob(chunks));
+    }
+
+    /* ---------- Voice UI helpers (all values come from the backend) ---------- */
+    const $ = id => document.getElementById(id);
+    // Works from Live Server (port 5500) or directly from Flask (port 5001)
+    const API = location.port === '5001' ? '' : 'http://127.0.0.1:5001';
+    const MUTED = 'var(--text-muted)', OKC = '#10b981', BADC = '#ef4444', WARNC = 'var(--warning)';
+
+    function setResult(cls, title, sub, subColor) {
+      const el = $('result');
+      el.className = cls;
+      el.textContent = '';
+      const b = document.createElement('b'); b.textContent = title;
+      const s = document.createElement('small'); s.textContent = sub || ''; s.style.color = subColor || MUTED;
+      el.append(b, s);
+    }
+
+    function updateMeter(fillId, valId, pct, ok, label) {
+      const color = ok === null ? '#64748b' : (ok ? OKC : BADC);
+      const valEl = $(valId), fill = $(fillId);
+      valEl.textContent = label;
+      valEl.style.color = color;
+      fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+      fill.style.backgroundColor = color;
+    }
+
+    function resetMeters() {
+      updateMeter('passFill', 'passVal', 0, null, '-');
+      updateMeter('voiceFill', 'voiceVal', 0, null, '-');
+    }
+
+    function setMark(threshold) {
+      const m = $('thrMark');
+      if (typeof threshold === 'number') { m.style.left = (threshold * 100) + '%'; m.style.display = 'block'; }
+    }
+
+    function updateUIState() {
+      $('sampleCount').textContent = savedCount + ' / 3 samples saved';
+      $('recBtn').disabled = savedCount >= 3;
+      $('verBtn').disabled = savedCount < 3;
+      const locked = savedCount >= 3;   // profile complete: phrase is stored only as a hash
+      $('ownerName').disabled = locked; $('voicePhrase').disabled = locked;
+      if (locked) { $('voicePhrase').value = ''; $('voicePhrase').placeholder = '•••• saved (verify ke liye type nahi karna)'; }
+    }
+
+    // Reads the real saved-profile state from the Python backend. Returns true if the backend answered OK.
+    async function refreshStatus() {
+      const res = await fetch(API + '/api/status');
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        savedCount = 0; updateUIState();
+        setResult('warn', 'Profile problem', (j.error || 'Status check fail hua.') + ' "Sab delete karo" dabakar reset karein aur dobara enroll karein.', WARNC);
+        return false;
+      }
+      setMark(j.threshold);
+      savedCount = j.samples_count || 0;
+      if (j.name) $('ownerName').value = j.name;
+      updateUIState();
+      return true;
+    }
+
+    function setBusy(on) {
+      $('resetBtn').disabled = on;
+      if (on) { $('recBtn').disabled = true; $('verBtn').disabled = true; } else updateUIState();
+    }
+
+    function errText(e) {
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) return 'Microphone permission blocked. Browser ke lock icon se mic allow karein aur page reload karein.';
+      if (e && e.name === 'NotFoundError') return 'Koi microphone nahi mila.';
+      if (e instanceof TypeError) return 'Backend se connect nahi hua. Python server (python app.py) chalu rakhein; http://127.0.0.1:5001/api/status browser me khol kar check karein.';
+      return 'Unexpected error: ' + (e && e.message ? e.message : e);
+    }
+
+    async function postJson(url, fd) {
+      const res = await fetch(url, { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({ error: 'Backend (port 5001) se sahi jawab nahi aaya. Terminal me python app.py chal raha hai? Browser me http://127.0.0.1:5001/api/status kholkar check karein.' }));
+      return { ok: res.ok, data };
+    }
+
+    function formFor(blob, fname, withPhrase = false) {
+      const fd = new FormData();
+      fd.append('audio', blob, fname);
+      fd.append('name', $('ownerName').value.trim());
+      if (withPhrase) fd.append('password', $('voicePhrase').value);   // only needed while enrolling
+      return fd;
+    }
+
+    function inputsOk(needPhrase = true) {
+      if (!$('ownerName').value.trim() || (needPhrase && $('voicePhrase').value.trim().length < 3)) {
+        setResult('warn', 'Details missing', 'Owner name aur password phrase (kam se kam 3 characters) likhiye.', WARNC);
+        return false;
+      }
+      return true;
+    }
+
+    function addItem(text, blob, ok) {
+      const li = document.createElement('li'); li.className = ok ? 's-ok' : 's-bad';
+      const t = document.createElement('span'); t.textContent = text; li.append(t);
+      if (blob) { const a = document.createElement('audio'); a.controls = true; a.src = URL.createObjectURL(blob); li.append(a); }
+      $('sampleList').append(li);
+    }
+
+    function tooQuiet(blob) {
+      if (blob.peak < 0.02) {
+        setResult('warn', 'Awaaz nahi pakdi', 'Mic se bahut dheemi ya koi awaaz nahi aayi. Sahi mic chunein (browser address bar ka mic icon), mic ke paas bolein, phir dobara try karein.', WARNC);
+        addItem('Rejected ✗ — recording silent', blob, false);
+        return true;
+      }
+      return false;
+    }
+
+    /* ---------- Enroll ---------- */
+    $('recBtn').onclick = async () => {
+      if (!inputsOk()) return;
+      setBusy(true);
+      try {
+        setResult('', 'Recording…', 'Poora password phrase saaf awaaz mein boliye.');
+        const blob = await recordClip($('recBtn'));
+        if (tooQuiet(blob)) return;
+        setResult('', 'Checking sample…', 'Speech recognition aur voiceprint check ho raha hai.');
+        const { ok, data } = await postJson(API + '/api/save-sample', formFor(blob, 'sample.wav', true));
+        if (ok && data.status === 'success') {
+          savedCount = data.samples_count;
+          addItem(`Sample ${savedCount} saved ✓`, blob, true);
+          if (savedCount >= 3) setResult('ok', 'Voice Saved!', 'Ab Verify button dabakar test karein.', OKC);
+          else setResult('', 'Sample saved', `${3 - savedCount} aur sample record karein.`);
+        } else {
+          addItem(`Rejected ✗ — ${data.error || 'save nahi hua'}`, blob, false);
+          setResult('bad', 'Sample rejected', data.error || 'Sample save nahi hua.', BADC);
+        }
+      } catch (e) {
+        console.error(e);
+        setResult('warn', 'Error', errText(e), WARNC);
+      } finally { setBusy(false); }
+    };
+
+    /* ---------- Reset ---------- */
+    $('resetBtn').onclick = async () => {
+      if (!confirm('Server par saved voiceprints aur password-phrase hash delete ho jayenge (secret.key rahegi). Dobara 3 samples record karne honge. Continue?')) return;
+      setBusy(true);
+      try {
+        const res = await fetch(API + '/api/reset', { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) {
+          setResult('warn', 'Reset failed', data.error || 'Backend ne reset confirm nahi kiya.', WARNC);
+          return;
+        }
+        if (!(await refreshStatus())) return;           // shows its own message on failure
+        if (savedCount !== 0) { setResult('warn', 'Reset incomplete', `Server abhi bhi ${savedCount} sample(s) dikha raha hai.`, WARNC); return; }
+        $('sampleList').innerHTML = '';
+        resetMeters();
+        $('voicePhrase').value = 'abhi hi password hai'; $('voicePhrase').placeholder = '';
+        setResult('', 'Ready', 'Profile delete ho gaya. Pehle 3 samples save karo.');
+      } catch (e) {
+        console.error(e);
+        setResult('warn', 'Error', errText(e), WARNC);
+      } finally { setBusy(false); }
+    };
+
+    /* ---------- Verify ---------- */
+    const ERR_TITLES = { BAD_AUDIO: 'Poor Audio', REPLAY: 'Replay Detected', NOT_ENROLLED: 'Not Enrolled' };
+
+    let verifyAttempt = 0;
+
+    $('verBtn').onclick = async () => {
+      if (!inputsOk(false)) return;
+      setBusy(true);
+      resetMeters();                       // never leave the previous attempt's bars on screen
+      const attempt = ++verifyAttempt;
+      try {
+        setResult('', 'Speak now…', 'Password phrase boliye.');
+        const blob = await recordClip($('verBtn'));
+        if (tooQuiet(blob)) return;
+        setResult('', 'Analyzing…', 'Speaker aur phrase dono check ho rahe hain.');
+        const { ok, data } = await postJson(API + '/api/verify', formFor(blob, 'verify.wav'));
+
+        if (!ok) {
+          resetMeters();
+          setResult('warn', ERR_TITLES[data.status] || 'Verification Error', data.error || data.message || 'Verify nahi ho saka.', WARNC);
+          return;
+        }
+
+        setMark(data.threshold);
+        updateMeter('passFill', 'passVal', data.passPct, data.phraseMatch,
+                    data.phraseMatch ? 'Phrase matched ✓' : 'Phrase mismatch ✗');
+        updateMeter('voiceFill', 'voiceVal', data.voicePct, data.speakerMatch,
+                    `${data.speakerScore.toFixed(2)} (min ${data.threshold.toFixed(2)})`);
+
+        const heard = data.recognizedText ? `"${data.recognizedText}"` : 'nothing';
+        const detail = `Attempt ${attempt} · Speaker score ${data.speakerScore.toFixed(2)} (min ${data.threshold.toFixed(2)}) · Heard: ${heard}`;
+        if (data.status === 'SUCCESS') setResult('ok', `Success — Welcome ${data.name}`, `Registered speaker aur sahi phrase dono verify hue. ${detail}`, OKC);
+        else if (data.status === 'WRONG_PASSWORD') setResult('bad', 'Wrong Password Phrase', `Awaaz match hui, par phrase galat suna gaya. ${detail}`, BADC);
+        else if (data.status === 'OTHER_SPEAKER') setResult('warn', 'Another person is speaking.', `Phrase sahi hai, par awaaz registered person ki nahi lagi. ${detail}`, WARNC);
+        else setResult('bad', 'Unsuccess', `${data.message} ${detail}`, BADC);
+      } catch (e) {
+        console.error(e);
+        resetMeters();
+        setResult('warn', 'Error', errText(e), WARNC);
+      } finally { setBusy(false); }
+    };
+
+    /* ---------- Restore persisted profile state after page load / server restart ---------- */
+    (async () => {
+      updateUIState(); resetMeters();
+      try {
+        if (await refreshStatus()) {
+          if (savedCount > 0) addItem(`${savedCount} sample(s) server par saved hain (sirf voiceprint, audio file nahi rakhi jaati)`, null, true);
+          if (savedCount >= 3) setResult('', 'Ready to verify', 'Voice profile saved hai. "Speak password & Verify" dabakar apna phrase bolein. Type karne ki zaroorat nahi.');
+        }
+      } catch (e) {
+        setResult('warn', 'Backend offline', 'Python server (http://127.0.0.1:5001) se connect nahi hua. Terminal me python app.py chalayein, phir page reload karein.', WARNC);
+      }
+    })();
+  </script>
+</body>
+</html>
