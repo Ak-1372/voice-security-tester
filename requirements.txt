@@ -8,3 +8,4 @@ torchaudio==2.5.1
 speechbrain==1.0.3
 huggingface_hub<0.26
 faster-whisper==1.0.3
+gunicorn
